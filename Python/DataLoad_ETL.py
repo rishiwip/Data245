@@ -21,7 +21,7 @@ def postgresConnection():
         connection = pg.connect(
             host="localhost",
             user='postgres',
-            password="Welcome123",
+            password="****",
         )
         print('postgresConnection established...')
         return connection
