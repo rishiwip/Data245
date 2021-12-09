@@ -2,7 +2,6 @@ import time
 import cx_Oracle
 import psycopg2 as pg
 from datetime import timedelta
-import cbpro
 import pandas as pd
 import numpy as np
 import math
@@ -15,19 +14,11 @@ from sklearn.model_selection import cross_val_score
 from sklearn.metrics import confusion_matrix
 import warnings
 warnings.filterwarnings('ignore')
-# Technical Indicators
-import talib as ta
-# Plotting graphs
-import matplotlib.pyplot as plt
-# Machine learning
 from sklearn.naive_bayes import GaussianNB
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
-from sklearn import metrics
-from sklearn.model_selection import cross_val_score
-from sklearn.metrics import confusion_matrix
 import seaborn as sns
 from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
@@ -39,21 +30,14 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn import neighbors
 from sklearn.model_selection import GridSearchCV
 from sklearn.preprocessing import MinMaxScaler
-from sklearn.metrics import accuracy_score
-import matplotlib.pyplot as plt
 import tensorflow as tf
 from tensorflow.python.client import device_lib
 from sklearn.metrics import mean_squared_error
 from sklearn.metrics import r2_score
 from sklearn.metrics import mean_absolute_error
-
-#importing LSTM required libraries
-from sklearn.preprocessing import MinMaxScaler
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM
 from sklearn.decomposition import PCA
-
-# Import pickle Package
 import pickle
 
 feature_cols = []
@@ -67,7 +51,7 @@ def postgresConnection():
         connection = pg.connect(
             host="localhost",
             user='postgres',
-            password="***",
+            password="Welcome123",
         )
         print('postgresConnection established...')
         return connection
@@ -136,12 +120,7 @@ def getPredictData(result,column_names,ingredients):
                 valData.append(1)
             else:
                 valData.append(0)
-        #print(valData)
-        #print(len(valData))
         return valData
-        #keyList.append('healthy')
-        #allCols = keyList
-        #print(valData)
     except Exception as e:
         print("Exception occurrred in getPredictData")
         print(str(e))
@@ -149,7 +128,7 @@ def getPredictData(result,column_names,ingredients):
 def getModellingData(ingredientsDict):
     try:
         ingredients  = ingredientsDict.keys()
-        fltr = ' = 1 or '.join(x for x in ingredients) + ' = 1'     #pick from 87
+        fltr = ' = 1 or '.join(x for x in ingredients) + ' = 1'   
         conn = postgresConnection()
         curr = conn.cursor()
         sql = "with temp as ( select A.*,row_number() over (partition by healthy) as RNK from RECIPEDB.VW_INGREDIENTS A \
@@ -157,9 +136,7 @@ def getModellingData(ingredientsDict):
         print(sql)
         curr.execute(sql)
         column_names = [desc[0] for desc in curr.description]
-        #print(column_names)
         result = curr.fetchall()
-        #print(result[0])
         curr.close()
         conn.close()
         return {'column_names':column_names,'data':result}
@@ -219,10 +196,6 @@ def mlModelling(df,algo):
         y_pred = clf.predict(X_test) # Predictions
         y_true = y_test # True values
         
-        # Measure accuracy
-        #from sklearn.metrics import accuracy_score
-        #import numpy as np
-        
         print('---------------------------')
         print("Train accuracy:", np.round(accuracy_score(y_train, 
                                                         clf.predict(X_train)), 2))
@@ -230,13 +203,10 @@ def mlModelling(df,algo):
         
         #Predict Class Labels
         predicted = clf.predict(X_test)
-        #print('Class Lables are :',predicted)
-        #print('')
         # Make the confusion matrix
         plt.clf()
         cf_matrix = metrics.confusion_matrix(y_test, predicted)
-        #cf_matrix = confusion_matrix(y_true, y_pred)
-        #print("\nTest confusion_matrix")
+
         sns.heatmap(cf_matrix, annot=True, cmap='Oranges')
         plt.xlabel('Predicted', fontsize=12)
         plt.ylabel('True', fontsize=12)
@@ -250,8 +220,6 @@ def mlModelling(df,algo):
         #Model Accuracy
         print('Model Accuracy',clf.score(X_test,y_test))
         print('---------------------------')
-        #print("Train accuracy:", np.round(accuracy_score(y_train,model.predict(x_train)), 2))
-        #print("Test accuracy:", np.round(accuracy_score(y_test, model.predict(x_test)), 2))
         
         #Cross-testation
         cross_val = cross_val_score(clf, X, y, scoring='accuracy', cv=kfold)
@@ -355,10 +323,6 @@ def mlModellingPCA(df,algo,pc):
         y_pred = clf.predict(X_test_pca) # Predictions
         y_true = y_test # True values
         
-        # Measure accuracy
-        #from sklearn.metrics import accuracy_score
-        #import numpy as np
-        
         print('---------------------------')
         print("Train accuracy:", np.round(accuracy_score(y_train, 
                                                         clf.predict(X_train_pca)), 2))
@@ -366,13 +330,10 @@ def mlModellingPCA(df,algo,pc):
         
         #Predict Class Labels
         predicted = clf.predict(X_test_pca)
-        #print('Class Lables are :',predicted)
-        #print('')
-        # Make the confusion matrix
+
         plt.clf()
         cf_matrix = metrics.confusion_matrix(y_test, predicted)
-        #cf_matrix = confusion_matrix(y_true, y_pred)
-        #print("\nTest confusion_matrix")
+
         sns.heatmap(cf_matrix, annot=True, cmap='Oranges')
         plt.xlabel('Predicted', fontsize=12)
         plt.ylabel('True', fontsize=12)
@@ -386,9 +347,7 @@ def mlModellingPCA(df,algo,pc):
         #Model Accuracy
         print('Model Accuracy',clf.score(X_test_pca,y_test))
         print('---------------------------')
-        #print("Train accuracy:", np.round(accuracy_score(y_train,model.predict(x_train)), 2))
-        #print("Test accuracy:", np.round(accuracy_score(y_test, model.predict(x_test)), 2))
-        
+
         #Cross-testation
         cross_val = cross_val_score(clf, X_pca, y, scoring='accuracy', cv=kfold)
         print('Cross-validation : ',cross_val)
@@ -415,19 +374,24 @@ def main():
         features     = []
         ingredients  = ['olive oil','onion','white wine','anchovy','tomato','garlic','basil','oregano',
                 'fish','orange peel','white bread','apple','lemon juice','olive oil','black pepper']
+                
         ############################################
+        
         ingredientsDict = getAllFeatures(ingredients)
         print(list(ingredientsDict.keys()))
+        
         ############################################
+        
         modellingData = getModellingData(ingredientsDict)
+        
         ############################################
-        #print(modellingData['data'])
         
         df = pd.DataFrame(modellingData['data'], columns=modellingData['column_names'])
         df = df.drop(columns=['rnk'])
         #print(df.describe())
         
-        ############################################
+        ###########################################
+        
         #prepare the predicts data
         column_names = modellingData['column_names']
         data = modellingData['data']
@@ -435,13 +399,15 @@ def main():
 
         #############################################
         
-        mlModelling(df,'LR')
+        #mlModelling(df,'LR')   # ['LR','NB','SVM','KNN']
         #print(valData)
         
         #############################################
         
         #getPCAnumber(df)
-        #mlModellingPCA(df,'SVM',150)
+        #mlModellingPCA(df,'LR',150)
+        
+        #############################################
         
     except Exception as e:
         print("Exception occurred",str(e))    
@@ -450,4 +416,3 @@ if __name__ == '__main__':
         True
     else:
         False
-    
